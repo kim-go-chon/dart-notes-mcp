@@ -326,10 +326,17 @@ def test_security_and_robustness():
     check(match_topic(sec("리스", "사용권자산과 리스부채를 인식"), rule).matched,
           "실제 리스 노트 → 매칭")
 
-    # (d) 전환사채 취득자: '발행' 단어가 있어도 채무증권 분류면 매칭(false negative 보완)
+    # (d) 전환사채 취득자: 실제 '취득·보유' 명시 → 매칭
     cbh = get_topic_rule("전환사채 취득자 회계처리")
     s = sec("금융자산", "타사가 발행한 전환사채를 취득하여 보유 중이며 채무증권으로 분류")
-    check(match_topic(s, cbh).matched, "발행+채무증권 분류 → 취득자 매칭(perspective_strong)")
+    check(match_topic(s, cbh).matched, "'전환사채를 취득하여 보유' → 취득자 매칭")
+
+    # (e) 회계정책 분류 나열 + 발행 전환사채 → 비매칭 (라이브 238 노이즈 차단)
+    noise = sec("중요한 회계정책",
+                "금융자산은 매도가능증권·단기매매증권·만기보유증권·지분증권·채무증권으로 "
+                "분류한다. 당사가 발행한 전환사채는 부채로 인식한다")
+    check(not match_topic(noise, cbh).matched,
+          "회계정책 분류나열 + 발행 전환사채 → 취득자 비매칭(광의 facet 제거 효과)")
 
 
 if __name__ == "__main__":
