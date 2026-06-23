@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
 
-from . import company_meta, search as search_mod, topics
+from . import company_meta, index_db, index_search, search as search_mod, topics
 from .config import get_api_key
 from .dart_client import DartClient
 
@@ -57,7 +57,18 @@ def search_company_notes(
 
     Returns:
         회사별 매칭 주석 섹션(제목·연결/별도·신뢰도·매칭사유·본문발췌·표).
+        해당 연도가 인덱싱돼 있으면 인덱스(즉시·전수)로, 아니면 온디맨드로 검색.
     """
+    # 특정 회사 지정이 없고 해당 연도가 인덱싱돼 있으면 인덱스 사용(즉시·API콜 0·전수)
+    if not companies:
+        n = index_search.year_indexed(year)
+        if n:
+            res = index_search.search_index(
+                topic, markets=market, induty_prefix=industry_code,
+                induty_contains=industry_name, year=year, max_companies=max_companies,
+            )
+            res["index_filings"] = n
+            return res
     return search_mod.search_notes(
         _get_client(),
         topic=topic,
@@ -120,6 +131,13 @@ def resolve_company_info(name_or_code: str) -> dict:
 def meta_status() -> dict:
     """시장×업종 메타 캐시 현황(시장별 회사수)."""
     return company_meta.status()
+
+
+@mcp.tool()
+def index_status() -> dict:
+    """주석 전문 인덱스 현황(연도별 보고서 수·섹션 수). 인덱싱된 연도는 검색이
+    즉시·전수로 동작한다. 인덱싱은 CLI `python -m dart_notes_mcp.index_build --year YYYY`."""
+    return index_db.status()
 
 
 @mcp.tool()
