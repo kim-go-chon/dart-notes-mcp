@@ -1,0 +1,23 @@
+[project]
+name = "dart-notes-mcp"
+version = "0.1.0"
+description = "DART 전자공시 재무제표 주석(footnotes) 정밀검색 MCP — 시장(코스피/코스닥/비상장)·업종(KSIC)별로 특정 회계이슈 주석을 정확히 검색"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.6",
+    "httpx>=0.27",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "python-dotenv>=1.0",
+    "defusedxml>=0.7",
+]
+
+[project.scripts]
+dart-notes-mcp = "dart_notes_mcp.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dart_notes_mcp"]
